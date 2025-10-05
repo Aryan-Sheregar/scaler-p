@@ -8,7 +8,7 @@ const Navbar = () => {
     <nav className="bg-slate-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/dashboard" className="text-xl font-bold">
-          Learning Platform
+          Scaler Project
         </Link>
         {user && (
           <div className="flex items-center gap-4">

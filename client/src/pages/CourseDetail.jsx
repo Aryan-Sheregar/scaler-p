@@ -35,6 +35,27 @@ const CourseDetail = () => {
     }
   };
 
+  const handleDeleteCourse = async () => {
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    try {
+      await API.delete(`/courses/${id}`);
+      navigate("/dashboard");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete course");
+    }
+  };
+
+  const handleDeleteLecture = async (lectureId) => {
+    if (!window.confirm("Are you sure you want to delete this lecture?"))
+      return;
+    try {
+      await API.delete(`/lectures/${lectureId}`);
+      fetchCourseData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete lecture");
+    }
+  };
+
   const fetchProgress = async () => {
     try {
       const { data } = await API.get(`/progress/course/${id}`);
@@ -112,6 +133,15 @@ const CourseDetail = () => {
           className="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           {showAddLecture ? "Cancel" : "Add Lecture"}
+        </button>
+      )}
+
+      {user?.role === "instructor" && course?.instructor?._id === user.id && (
+        <button
+          onClick={handleDeleteCourse}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-4"
+        >
+          Delete Course
         </button>
       )}
 
@@ -197,6 +227,7 @@ const CourseDetail = () => {
                         required
                       />
                     ))}
+
                     <select
                       className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={q.correctAnswer}
@@ -266,17 +297,28 @@ const CourseDetail = () => {
                         </span>
                       )}
                     </div>
-                    {canAccess && (
-                      <button
-                        onClick={() => navigate(`/lecture/${lecture._id}`)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                      >
-                        {user?.role === "instructor" ? "View" : "Start"}
-                      </button>
-                    )}
-                    {!canAccess && (
-                      <span className="text-sm text-gray-400">Locked</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {canAccess && (
+                        <button
+                          onClick={() => navigate(`/lecture/${lecture._id}`)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          {user?.role === "instructor" ? "View" : "Start"}
+                        </button>
+                      )}
+                      {user?.role === "instructor" &&
+                        course?.instructor?._id === user.id && (
+                          <button
+                            onClick={() => handleDeleteLecture(lecture._id)}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 ml-2"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      {!canAccess && (
+                        <span className="text-sm text-gray-400">Locked</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -286,6 +328,7 @@ const CourseDetail = () => {
       </div>
     </div>
   );
+
 };
 
 export default CourseDetail;
