@@ -71,6 +71,32 @@ export const getLecture = async (req, res) => {
   }
 };
 
+export const deleteLecture = async (req, res) => {
+  try {
+    const authResult = await verifyToken(req, res);
+    if (authResult.error)
+      return res.status(authResult.status).json({ message: authResult.error });
+    const roleCheck = checkRole(authResult.user, ["instructor"]);
+    if (roleCheck)
+      return res.status(roleCheck.status).json({ message: roleCheck.error });
+
+    const lecture = await Lecture.findById(req.params.id);
+    if (!lecture) return res.status(404).json({ message: "Lecture not found" });
+
+    const course = await Course.findById(lecture.course);
+    if (
+      !course ||
+      course.instructor.toString() !== authResult.user._id.toString()
+    )
+      return res.status(403).json({ message: "Not authorized" });
+
+    await lecture.deleteOne();
+    res.json({ message: "Lecture deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const submitQuiz = async (req, res) => {
   try {
     const authResult = await verifyToken(req, res);

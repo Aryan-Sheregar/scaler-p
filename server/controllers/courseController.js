@@ -63,3 +63,35 @@ export const getCourse = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteCourse = async (req, res) => {
+  try {
+
+    const authResult = await verifyToken(req, res);
+    if (authResult.error) {
+      return res.status(authResult.status).json({ message: authResult.error });
+    }
+    const roleCheck = checkRole(authResult.user, ["instructor"]);
+    if (roleCheck) {
+      return res.status(roleCheck.status).json({ message: roleCheck.error });
+    }
+ //If the instructor owns that course then only delete karo
+    const course = await Course.findOne({
+      _id: req.params.id,
+      instructor: authResult.user._id,
+    });
+    if (!course) {
+      return res
+        .status(404)
+        .json({ message: "Course not found or not authorized" });
+    }
+
+    await Lecture.deleteMany({ course: course._id });
+
+    await course.deleteOne();
+
+    res.json({ message: "Course deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
